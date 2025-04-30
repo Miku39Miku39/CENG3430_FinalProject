@@ -133,7 +133,7 @@ signal prev_BTNU, prev_BTND, prev_BTNL, prev_BTNR: std_logic := '0';
 type MESSAGE_ARRAY is array (0 to MAZE_HEIGHT-1, 0 to MAZE_WIDTH-1) of std_logic;
 constant GAME_OVER_MSG : MESSAGE_ARRAY := (
     -- Each string represents a row; 30 chars per line
-    （SPACES）
+    -- (SPACES)
     "000000000000000000000000000000",
     "000000000000000000000000000000",
     "000000000000000000000000000000",
@@ -151,7 +151,7 @@ constant GAME_OVER_MSG : MESSAGE_ARRAY := (
     "000001001001010011100111000000",
     "000001001001010010000100100000",
     "000000110000100011110100100000",
-    （SPACES）
+    -- (SPACES)
     "000000000000000000000000000000",
     "000000000000000000000000000000",
     "000000000000000000000000000000"
@@ -486,6 +486,15 @@ signal MONSTERS_NEW : MONSTER_ARRAY(0 to 8) := (
     (row => 16, col => 25)    
 );
 
+--type VISIBLE_ARRAY is array (0 to MAZE_HEIGHT-1, 0 to MAZE_WIDTH-1) of std_logic;
+signal VISIBLE : MAZE_ARRAY := (others => (others => '0'));
+
+signal LIT_ROW : integer range 0 to MAZE_HEIGHT := 2; 
+signal LIT_COL : integer range 0 to MAZE_WIDTH := 0; 
+
+signal LIT_ROW_NEW : integer range 0 to MAZE_HEIGHT := MAZE_HEIGHT; 
+signal LIT_COL_NEW : integer range 0 to MAZE_WIDTH := MAZE_WIDTH;
+
 begin
 
 -- generate 50MHz clock
@@ -599,162 +608,168 @@ begin
             
             pixel_x := (hcount - H_START) mod CELL_SIZE; -- pixel x-coordinate in cell
             pixel_y := (vcount - V_START) mod CELL_SIZE; -- pixel y-coordinate in cell
-
-            -- Draw monsters on top (blue)
-            for i in 0 to MONSTERS'length-1 loop
-                if (maze_y = MONSTERS(i).row and maze_x = MONSTERS(i).col) then
-                    -- Within monster cell, show blue
-                    if (((hcount - H_START) mod CELL_SIZE) < PLAYER_SIZE) and (((vcount - V_START) mod CELL_SIZE) < PLAYER_SIZE) then
---                        red   <= "0000";
---                        green <= "0000";
---                        blue  <= "1111";
-                        if (MONSTER(pixel_y, pixel_x) = p) then
-                            red   <= "1111";
-                            green <= "0000";
-                            blue  <= "1111";
-                        elsif (MONSTER(pixel_y, pixel_x) = c) then
-                            red   <= "0100";
-                            green <= "0000";
-                            blue  <= "0000";
-                        elsif (MONSTER(pixel_y, pixel_x) = b) then
-                            red   <= "0000";
-                            green <= "0000";
-                            blue  <= "0000";
-                        elsif (MONSTER(pixel_y, pixel_x) = w) then
-                            red   <= "1111";
-                            green <= "1111";
-                            blue  <= "1111";
-                        elsif (MONSTER(pixel_y, pixel_x) = e) then
-                            red   <= "1000";
-                            green <= "0000";
-                            blue  <= "0000";
-                        elsif (MONSTER(pixel_y, pixel_x) = g) then
-                            red   <= "1001";
-                            green <= "1001";
-                            blue  <= "1001";
-                        elsif (MONSTER(pixel_y, pixel_x) = r) then
-                            red   <= "1111";
-                            green <= "0000";
-                            blue  <= "0000";
-                        end if;
-                        show_monster := true;
-                    end if;
-                end if;
-            end loop;
-
-            if not show_monster then
-                -- Player : draw on top of maze, except if monster present
-                if (maze_y = player_row and maze_x = player_col) then
-                    -- Within player square
-                    if (((hcount - H_START) mod CELL_SIZE) < PLAYER_SIZE) and (((vcount - V_START) mod CELL_SIZE) < PLAYER_SIZE) then
---                        red   <= "1111";
---                        green <= "0000";
---                        blue  <= "1111";
-                        if (PLAYER(pixel_y, pixel_x) = k) then
-                            red   <= "1001";
-                            green <= "0011";
-                            blue  <= "0000";
-                        elsif (PLAYER(pixel_y, pixel_x) = b) then
-                            red   <= "0000";
-                            green <= "0000";
-                            blue  <= "0000";
-                        elsif (PLAYER(pixel_y, pixel_x) = w) then
-                            red   <= "1111";
-                            green <= "1111";
-                            blue  <= "1111";
-                        elsif (PLAYER(pixel_y, pixel_x) = g) then
-                            red   <= "1000";
-                            green <= "1000";
-                            blue  <= "1000";
-                        elsif (PLAYER(pixel_y, pixel_x) = r) then
-                            red   <= "1111";
-                            green <= "0000";
-                            blue  <= "0000";
-                        elsif (PLAYER(pixel_y, pixel_x) = l) then
-                            red   <= "1100";
-                            green <= "1111";
-                            blue  <= "1100";
-                        elsif (PLAYER(pixel_y, pixel_x) = m) then
-                            red   <= "0000";
-                            green <= "1101";
-                            blue  <= "1111";
-                        elsif (PLAYER(pixel_y, pixel_x) = d) then
-                            red   <= "0000";
-                            green <= "1001";
-                            blue  <= "1111";
-                        elsif (PLAYER(pixel_y, pixel_x) = s) then
-                            red   <= "1111";
-                            green <= "1101";
-                            blue  <= "1011";
+            
+            if (VISIBLE(maze_y, maze_x) = '0') then
+                red <= "0000";
+                green <= "0000";
+                blue <= "0000";
+            else
+                -- Draw monsters on top (blue)
+                for i in 0 to MONSTERS'length-1 loop
+                    if (maze_y = MONSTERS(i).row and maze_x = MONSTERS(i).col) then
+                        -- Within monster cell, show blue
+                        if (((hcount - H_START) mod CELL_SIZE) < PLAYER_SIZE) and (((vcount - V_START) mod CELL_SIZE) < PLAYER_SIZE) then
+--                            red   <= "0000";
+--                            green <= "0000";
+--                            blue  <= "1111";
+                            if (MONSTER(pixel_y, pixel_x) = p) then
+                                red   <= "1111";
+                                green <= "0000";
+                                blue  <= "1111";
+                            elsif (MONSTER(pixel_y, pixel_x) = c) then
+                                red   <= "0100";
+                                green <= "0000";
+                                blue  <= "0000";
+                            elsif (MONSTER(pixel_y, pixel_x) = b) then
+                                red   <= "0000";
+                                green <= "0000";
+                                blue  <= "0000";
+                            elsif (MONSTER(pixel_y, pixel_x) = w) then
+                                red   <= "1111";
+                                green <= "1111";
+                                blue  <= "1111";
+                            elsif (MONSTER(pixel_y, pixel_x) = e) then
+                                red   <= "1000";
+                                green <= "0000";
+                                blue  <= "0000";
+                            elsif (MONSTER(pixel_y, pixel_x) = g) then
+                                red   <= "1001";
+                                green <= "1001";
+                                blue  <= "1001";
+                            elsif (MONSTER(pixel_y, pixel_x) = r) then
+                                red   <= "1111";
+                                green <= "0000";
+                                blue  <= "0000";
+                            end if;
+                            show_monster := true;
                         end if;
                     end if;
-                -- Start 
-                elsif (maze_y = START_ROW and maze_x = START_COL) then
-                    red   <= "0000";
-                    green <= "1111";
-                    blue  <= "0000";
-                -- End 
-                elsif (maze_y = END_ROW and maze_x = END_COL) then
-                    red   <= "1111";
-                    green <= "0000";
-                    blue  <= "0000";
-                -- Walls/paths
-                elsif (maze_x >= 0 and maze_x < MAZE_WIDTH and maze_y >= 0 and maze_y < MAZE_HEIGHT) then
-                    if (current_maze(maze_y, maze_x) = '1') then
---                        -- Wall: black
---                        red   <= "0000";
---                        green <= "0000";
---                        blue  <= "0000";
-                        if (WALLS(pixel_y, pixel_x) = gap) then
-                            red   <= "0100";
-                            green <= "0100";
-                            blue  <= "0100";
-                        elsif (WALLS(pixel_y, pixel_x) = b5) then
-                            red   <= "0111";
-                            green <= "0111";
-                            blue  <= "0111";
-                        elsif (WALLS(pixel_y, pixel_x) = b4) then
-                            red   <= "1000";
-                            green <= "1000";
-                            blue  <= "1000";
-                        elsif (WALLS(pixel_y, pixel_x) = b3) then
-                            red   <= "1001";
-                            green <= "1001";
-                            blue  <= "1001";
-                        elsif (WALLS(pixel_y, pixel_x) = b2) then
-                            red   <= "1010";
-                            green <= "1010";
-                            blue  <= "1010";
-                        elsif (WALLS(pixel_y, pixel_x) = b1) then
-                            red   <= "1011";
-                            green <= "1011";
-                            blue  <= "1011";
+                end loop;
+    
+                if not show_monster then
+                    -- Player : draw on top of maze, except if monster present
+                    if (maze_y = player_row and maze_x = player_col) then
+                        -- Within player square
+                        if (((hcount - H_START) mod CELL_SIZE) < PLAYER_SIZE) and (((vcount - V_START) mod CELL_SIZE) < PLAYER_SIZE) then
+--                            red   <= "1111";
+--                            green <= "0000";
+--                            blue  <= "1111";
+                            if (PLAYER(pixel_y, pixel_x) = k) then
+                                red   <= "1001";
+                                green <= "0011";
+                                blue  <= "0000";
+                            elsif (PLAYER(pixel_y, pixel_x) = b) then
+                                red   <= "0000";
+                                green <= "0000";
+                                blue  <= "0000";
+                            elsif (PLAYER(pixel_y, pixel_x) = w) then
+                                red   <= "1111";
+                                green <= "1111";
+                                blue  <= "1111";
+                            elsif (PLAYER(pixel_y, pixel_x) = g) then
+                                red   <= "1000";
+                                green <= "1000";
+                                blue  <= "1000";
+                            elsif (PLAYER(pixel_y, pixel_x) = r) then
+                                red   <= "1111";
+                                green <= "0000";
+                                blue  <= "0000";
+                            elsif (PLAYER(pixel_y, pixel_x) = l) then
+                                red   <= "1100";
+                                green <= "1111";
+                                blue  <= "1100";
+                            elsif (PLAYER(pixel_y, pixel_x) = m) then
+                                red   <= "0000";
+                                green <= "1101";
+                                blue  <= "1111";
+                            elsif (PLAYER(pixel_y, pixel_x) = d) then
+                                red   <= "0000";
+                                green <= "1001";
+                                blue  <= "1111";
+                            elsif (PLAYER(pixel_y, pixel_x) = s) then
+                                red   <= "1111";
+                                green <= "1101";
+                                blue  <= "1011";
+                            end if;
                         end if;
-                    else
-                        -- Path: white
---                        red   <= "1111";
---                        green <= "1111";
---                        blue  <= "1111";
-                        if (PATHS(pixel_y, pixel_x) = dark) then
-                            red   <= "0011";
-                            green <= "0000";
-                            blue  <= "0000";
-                        elsif (PATHS(pixel_y, pixel_x) = mid) then
-                            red   <= "0111";
-                            green <= "0000";
-                            blue  <= "0000";
-                        elsif (PATHS(pixel_y, pixel_x) = light) then
-                            red   <= "1011";
-                            green <= "0101";
-                            blue  <= "0000";
-                        elsif (PATHS(pixel_y, pixel_x) = pebble) then
-                            red   <= "1111";
-                            green <= "1010";
-                            blue  <= "0100";
-                        elsif (PATHS(pixel_y, pixel_x) = ground) then
-                            red   <= "1001";
-                            green <= "0011";
-                            blue  <= "0000";
+                    -- Start 
+                    elsif (maze_y = START_ROW and maze_x = START_COL) then
+                        red   <= "0000";
+                        green <= "1111";
+                        blue  <= "0000";
+                    -- End 
+                    elsif (maze_y = END_ROW and maze_x = END_COL) then
+                        red   <= "1111";
+                        green <= "0000";
+                        blue  <= "0000";
+                    -- Walls/paths
+                    elsif (maze_x >= 0 and maze_x < MAZE_WIDTH and maze_y >= 0 and maze_y < MAZE_HEIGHT) then
+                        if (current_maze(maze_y, maze_x) = '1') then
+--                            -- Wall: black
+--                            red   <= "0000";
+--                            green <= "0000";
+--                            blue  <= "0000";
+                            if (WALLS(pixel_y, pixel_x) = gap) then
+                                red   <= "0100";
+                                green <= "0100";
+                                blue  <= "0100";
+                            elsif (WALLS(pixel_y, pixel_x) = b5) then
+                                red   <= "0111";
+                                green <= "0111";
+                                blue  <= "0111";
+                            elsif (WALLS(pixel_y, pixel_x) = b4) then
+                                red   <= "1000";
+                                green <= "1000";
+                                blue  <= "1000";
+                            elsif (WALLS(pixel_y, pixel_x) = b3) then
+                                red   <= "1001";
+                                green <= "1001";
+                                blue  <= "1001";
+                            elsif (WALLS(pixel_y, pixel_x) = b2) then
+                                red   <= "1010";
+                                green <= "1010";
+                                blue  <= "1010";
+                            elsif (WALLS(pixel_y, pixel_x) = b1) then
+                                red   <= "1011";
+                                green <= "1011";
+                                blue  <= "1011";
+                            end if;
+                        else
+--                             Path: white
+--                            red   <= "1111";
+--                            green <= "1111";
+--                            blue  <= "1111";
+                            if (PATHS(pixel_y, pixel_x) = dark) then
+                                red   <= "0011";
+                                green <= "0000";
+                                blue  <= "0000";
+                            elsif (PATHS(pixel_y, pixel_x) = mid) then
+                                red   <= "0111";
+                                green <= "0000";
+                                blue  <= "0000";
+                            elsif (PATHS(pixel_y, pixel_x) = light) then
+                                red   <= "1011";
+                                green <= "0101";
+                                blue  <= "0000";
+                            elsif (PATHS(pixel_y, pixel_x) = pebble) then
+                                red   <= "1111";
+                                green <= "1010";
+                                blue  <= "0100";
+                            elsif (PATHS(pixel_y, pixel_x) = ground) then
+                                red   <= "1001";
+                                green <= "0011";
+                                blue  <= "0000";
+                            end if;
                         end if;
                     end if;
                 end if;
@@ -877,30 +892,62 @@ begin
     end if;
 end process monster_movement_proc;
 
+visibility_update_proc : process(clk1Hz, LIT_ROW, LIT_COL)
+    variable row, col, i, j : integer;
+begin
+    for row in 0 to MAZE_HEIGHT-1 loop
+        for col in 0 to MAZE_WIDTH-1 loop
+            if(abs(row - LIT_ROW) <= 2) and (abs(col - LIT_COL) <= 2) then
+                VISIBLE(row, col) <= '1';
+            else
+                VISIBLE(row, col) <= '0';
+            end if;
+        end loop;
+    end loop;
+    if rising_edge(clk1Hz) then
+--        if (LIT_COL < 29) then
+--            LIT_COL <= LIT_COL + 1;
+--        else
+--            LIT_COL <= 0;
+--        end if;
+        LIT_COL <= LIT_COL_NEW;
+        LIT_ROW <= LIT_ROW_NEW;
+    end if;
+end process visibility_update_proc;
+
 -- Update current maze and positions based on level
 current_maze <= get_maze(level);
-start_row <= START_ROW_ARR(level);
 start_col <= START_COL_ARR(level);
-end_row   <= END_ROW_ARR(level);
+start_row <= START_ROW_ARR(level);
 end_col   <= END_COL_ARR(level);
+end_row   <= END_ROW_ARR(level);
+
     
-MONSTERS_NEW(0).col <= to_integer(unsigned(s_slv_reg0 (4 downto 0)));
-MONSTERS_NEW(0).row <= to_integer(unsigned(s_slv_reg0 (9 downto 5)));
-MONSTERS_NEW(1).col <= to_integer(unsigned(s_slv_reg0 (15 downto 11)));
-MONSTERS_NEW(1).row <= to_integer(unsigned(s_slv_reg0 (20 downto 16)));
-MONSTERS_NEW(2).col <= to_integer(unsigned(s_slv_reg0 (26 downto 22)));
-MONSTERS_NEW(2).row <= to_integer(unsigned(s_slv_reg0 (31 downto 27)));
-MONSTERS_NEW(3).col <= to_integer(unsigned(s_slv_reg1 (4 downto 0)));
-MONSTERS_NEW(3).row <= to_integer(unsigned(s_slv_reg1 (9 downto 5)));
-MONSTERS_NEW(4).col <= to_integer(unsigned(s_slv_reg1 (15 downto 11)));
-MONSTERS_NEW(4).row <= to_integer(unsigned(s_slv_reg1 (20 downto 16)));
-MONSTERS_NEW(5).col <= to_integer(unsigned(s_slv_reg1 (26 downto 22)));
-MONSTERS_NEW(5).row <= to_integer(unsigned(s_slv_reg1 (31 downto 27)));
-MONSTERS_NEW(6).col <= to_integer(unsigned(s_slv_reg2 (4 downto 0)));
-MONSTERS_NEW(6).row <= to_integer(unsigned(s_slv_reg2 (9 downto 5)));
-MONSTERS_NEW(7).col <= to_integer(unsigned(s_slv_reg2 (15 downto 11)));
-MONSTERS_NEW(7).row <= to_integer(unsigned(s_slv_reg2 (20 downto 16)));
-MONSTERS_NEW(8).col <= to_integer(unsigned(s_slv_reg2 (26 downto 22)));
-MONSTERS_NEW(8).row <= to_integer(unsigned(s_slv_reg2 (31 downto 27)));
+--    s_slv_reg0 <= (C_S00_AXI_DATA_WIDTH-1 downto 1 => '0') & BTNU;
+--    s_slv_reg1 <= (C_S00_AXI_DATA_WIDTH-1 downto 1 => '0') & BTND;
+--    s_slv_reg2 <= (C_S00_AXI_DATA_WIDTH-1 downto 1 => '0') & BTNL;
+--    s_slv_reg3 <= (C_S00_AXI_DATA_WIDTH-1 downto 1 => '0') & BTNR;
+    
+--    MONSTERS_NEW(0).col <= to_integer(unsigned(s_slv_reg0 (4 downto 0)));
+--    MONSTERS_NEW(0).row <= to_integer(unsigned(s_slv_reg0 (9 downto 5)));
+--    MONSTERS_NEW(1).col <= to_integer(unsigned(s_slv_reg0 (15 downto 11)));
+--    MONSTERS_NEW(1).row <= to_integer(unsigned(s_slv_reg0 (20 downto 16)));
+--    MONSTERS_NEW(2).col <= to_integer(unsigned(s_slv_reg0 (26 downto 22)));
+--    MONSTERS_NEW(2).row <= to_integer(unsigned(s_slv_reg0 (31 downto 27)));
+--    MONSTERS_NEW(3).col <= to_integer(unsigned(s_slv_reg1 (4 downto 0)));
+--    MONSTERS_NEW(3).row <= to_integer(unsigned(s_slv_reg1 (9 downto 5)));
+--    MONSTERS_NEW(4).col <= to_integer(unsigned(s_slv_reg1 (15 downto 11)));
+--    MONSTERS_NEW(4).row <= to_integer(unsigned(s_slv_reg1 (20 downto 16)));
+--    MONSTERS_NEW(5).col <= to_integer(unsigned(s_slv_reg1 (26 downto 22)));
+--    MONSTERS_NEW(5).row <= to_integer(unsigned(s_slv_reg1 (31 downto 27)));
+--    MONSTERS_NEW(6).col <= to_integer(unsigned(s_slv_reg2 (4 downto 0)));
+--    MONSTERS_NEW(6).row <= to_integer(unsigned(s_slv_reg2 (9 downto 5)));
+--    MONSTERS_NEW(7).col <= to_integer(unsigned(s_slv_reg2 (15 downto 11)));
+--    MONSTERS_NEW(7).row <= to_integer(unsigned(s_slv_reg2 (20 downto 16)));
+--    MONSTERS_NEW(8).col <= to_integer(unsigned(s_slv_reg2 (26 downto 22)));
+--    MONSTERS_NEW(8).row <= to_integer(unsigned(s_slv_reg2 (31 downto 27)));
+
+--    LIT_COL_NEW <= to_integer(unsigned(s_slv_reg3 (4 downto 0)));
+--    LIT_ROW_NEW <= to_integer(unsigned(s_slv_reg3 (9 downto 5)));
 
 end game_display_arch;
