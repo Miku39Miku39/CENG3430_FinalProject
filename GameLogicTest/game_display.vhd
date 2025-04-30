@@ -473,6 +473,19 @@ signal MONSTERS : MONSTER_ARRAY(0 to 8) := (
     (row => 16, col => 25)    -- vertical
 );
 
+-- Monster coordinates received from Vitis
+signal MONSTERS_NEW : MONSTER_ARRAY(0 to 8) := (
+    (row => 3, col => 3),   
+    (row => 5, col => 18),    
+    (row => 8, col => 13),    
+    (row => 14, col => 26),   
+    (row => 10, col => 4),    
+    (row => 2, col => 7),     
+    (row => 6, col => 20),    
+    (row => 12, col => 10),   
+    (row => 16, col => 25)    
+);
+
 begin
 
 -- generate 50MHz clock
@@ -852,31 +865,15 @@ begin
     end if;
 end process movement_proc;
 
--- Monster movement process: move only if enabled
+-- Monster movement process: monsters move continuously at 1Hz (no longer depend on button or monster_move_enable)
 monster_movement_proc : process(clk1Hz)
-    variable next_col : integer;
-    variable next_row : integer;
     variable i : integer;
 begin
     if rising_edge(clk1Hz) then
-        if monster_move_enable = '1' then
-            -- First five monsters move horizontally
-            for i in 0 to 4 loop
-                next_col := MONSTERS(i).col + 1;
-                if next_col >= MAZE_WIDTH then
-                    next_col := 0;
-                end if;
-                MONSTERS(i).col <= next_col;
-            end loop;
-            -- Last four monsters move vertically
-            for i in 5 to 8 loop
-                next_row := MONSTERS(i).row + 1;
-                if next_row >= MAZE_HEIGHT then
-                    next_row := 0;
-                end if;
-                MONSTERS(i).row <= next_row;
-            end loop;
-        end if;
+        for i in 0 to 8 loop
+            MONSTERS(i).col <= MONSTERS_NEW(i).col;
+            MONSTERS(i).row <= MONSTERS_NEW(i).row;
+        end loop;
     end if;
 end process monster_movement_proc;
 
@@ -886,5 +883,24 @@ start_row <= START_ROW_ARR(level);
 start_col <= START_COL_ARR(level);
 end_row   <= END_ROW_ARR(level);
 end_col   <= END_COL_ARR(level);
+    
+MONSTERS_NEW(0).col <= to_integer(unsigned(s_slv_reg0 (4 downto 0)));
+MONSTERS_NEW(0).row <= to_integer(unsigned(s_slv_reg0 (9 downto 5)));
+MONSTERS_NEW(1).col <= to_integer(unsigned(s_slv_reg0 (15 downto 11)));
+MONSTERS_NEW(1).row <= to_integer(unsigned(s_slv_reg0 (20 downto 16)));
+MONSTERS_NEW(2).col <= to_integer(unsigned(s_slv_reg0 (26 downto 22)));
+MONSTERS_NEW(2).row <= to_integer(unsigned(s_slv_reg0 (31 downto 27)));
+MONSTERS_NEW(3).col <= to_integer(unsigned(s_slv_reg1 (4 downto 0)));
+MONSTERS_NEW(3).row <= to_integer(unsigned(s_slv_reg1 (9 downto 5)));
+MONSTERS_NEW(4).col <= to_integer(unsigned(s_slv_reg1 (15 downto 11)));
+MONSTERS_NEW(4).row <= to_integer(unsigned(s_slv_reg1 (20 downto 16)));
+MONSTERS_NEW(5).col <= to_integer(unsigned(s_slv_reg1 (26 downto 22)));
+MONSTERS_NEW(5).row <= to_integer(unsigned(s_slv_reg1 (31 downto 27)));
+MONSTERS_NEW(6).col <= to_integer(unsigned(s_slv_reg2 (4 downto 0)));
+MONSTERS_NEW(6).row <= to_integer(unsigned(s_slv_reg2 (9 downto 5)));
+MONSTERS_NEW(7).col <= to_integer(unsigned(s_slv_reg2 (15 downto 11)));
+MONSTERS_NEW(7).row <= to_integer(unsigned(s_slv_reg2 (20 downto 16)));
+MONSTERS_NEW(8).col <= to_integer(unsigned(s_slv_reg2 (26 downto 22)));
+MONSTERS_NEW(8).row <= to_integer(unsigned(s_slv_reg2 (31 downto 27)));
 
 end game_display_arch;
